@@ -8,9 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
 
-/**
- * Created by COMP on 05.02.2018.
- */
 
 public class PopupFigure extends PopupWindow implements View.OnClickListener {
 

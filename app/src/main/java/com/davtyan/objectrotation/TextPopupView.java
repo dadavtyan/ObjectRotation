@@ -2,18 +2,13 @@ package com.davtyan.objectrotation;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.PopupWindow;
 
-/**
- * Created by COMP on 05.02.2018.
- */
+
 
 public class TextPopupView extends PopupWindow implements View.OnClickListener {
 
@@ -53,7 +48,6 @@ public class TextPopupView extends PopupWindow implements View.OnClickListener {
             case R.id.add_text:
                 text = editText.getText().toString();
                 MySurfaceView.TEXT = text;
-                MyDrawView.TEXT = text;
                 MainActivity.EXTRA = "draw_text";
                 dismiss();
                 break;

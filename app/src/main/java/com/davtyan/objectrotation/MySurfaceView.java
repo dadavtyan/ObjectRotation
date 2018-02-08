@@ -1,10 +1,14 @@
 package com.davtyan.objectrotation;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -15,12 +19,16 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
     public static String TEXT = "";
     private Paint paint;
     private DrawThread drawThread;
-    private float x = 250, y = 250, width = 150, height = 300;
+    private float x,y,width,height,rotate;
+    private String str;
 
     private boolean drag = false;
     private float moveX = 0;
-
-
+    DisplayMetrics metrics = getResources().getDisplayMetrics();
+    private float rotateX,rotateY;
+    private Bitmap bitmap,bitmapResult;
+    private int bitmapX = 450,bitmapY = 500;
+    private float moveY;
 
     public MySurfaceView(Context c, AttributeSet attrs) {
         this(c, attrs, 0);
@@ -30,8 +38,22 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
         super(c, attrs, defStyle);
         getHolder().addCallback(this);
         paint = new Paint();
+        initData();
     }
 
+    private void initData() {
+        width = metrics.widthPixels/2 + 100;
+        height = metrics.heightPixels/2 + 100;
+        x = metrics.widthPixels/2 - 100;
+        y = metrics.heightPixels/2 - 100;
+
+    }
+
+    public void setBitmap(Bitmap bitmap){
+        if (bitmap != null){
+            this.bitmap = bitmap;
+        }
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -39,80 +61,36 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
             case MotionEvent.ACTION_DOWN:
                 drag = true;
                 moveX = event.getX();
+                moveY = event.getY();
+                if (event.getX() > x && event.getX() < x+85 && event.getY() > y&& event.getY() < y+85 ){
+                    str = " ";
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
-                switch (MainActivity.EXTRA) {
-                    case "draw_point":
-                        rotateFigure(event);
-                        break;
-                    case "draw_line":
-                       rotateLine(event);
-                        break;
-                    case "draw_circle":
-                        rotateFigure(event);
-                        break;
-                    case "draw_rect":
-                        rotateFigure(event);
-                        break;
-                    case "draw_text":
-                        rotateFigure(event);
-                        break;
+                if (MainActivity.EXTRA == "select_image" && str != null){
+                    bitmapX = (int) (x + bitmapX -  event.getX());
+                    bitmapY = (int) (y + bitmapY - event.getY());
+                    x = event.getX() ;
+                    y = event.getY();
+
+                }else {
+                    rotate += (event.getX() - moveX) / 200;
                 }
                 break;
             case MotionEvent.ACTION_UP:
                 moveX = 0;
+                str = null;
                 drag = false;
                 break;
         }
         return true;
     }
 
-
-
-    public void rotateFigure(MotionEvent event) {
-        float widthCircle = 2 * width;
-        if (y >= widthCircle && x <= widthCircle ) {
-            x +=(event.getX() - moveX)/100;
-            y +=(event.getX() - moveX)/100;
-
-        }else if ( y >= widthCircle && x >= widthCircle){
-            x += (event.getX() - moveX)/100;
-            y -= (event.getX() - moveX)/100;
-        }
-        else if ( y <= widthCircle && x >= widthCircle){
-            x -= (event.getX() - moveX)/100;
-            y -= (event.getX() - moveX)/100;
-        }
-        else if ( y <= widthCircle && x <= widthCircle){
-            x -= (event.getX() - moveX)/100;
-            y += (event.getX() - moveX)/100;
-        }
+    private int getImageX(MotionEvent event) {
+        int length = (int) (Math.pow((event.getX() - moveX),2) - Math.pow((event.getY() - moveY),2));
+        return (int) Math.sqrt(length);
     }
-    public void rotateLine(MotionEvent event) {
-        if (y >= height && x <= width ) {
-            x += (event.getX() - moveX)/100;
-            y += (event.getX() - moveX)/100 ;
-            width -= (event.getX() - moveX)/100;
-            height -= (event.getX() - moveX)/100 ;
-        }else if ( y >= height && x >= width){
-            x += (event.getX() - moveX)/100;
-            y -= (event.getX() - moveX)/100;
-            width -= (event.getX() - moveX)/100;
-            height += (event.getX() - moveX)/100;
-        }
-        else if ( y <= height && x >= width){
-            x -= (event.getX() - moveX)/100;
-            y -= (event.getX() - moveX)/100;
-            width += (event.getX() - moveX)/100;
-            height += (event.getX() - moveX)/100;
-        }
-        else if ( y <= height && x <= width){
-            x -= (event.getX() - moveX)/100;
-            y += (event.getX() - moveX)/100;
-            width += (event.getX() - moveX)/100 ;
-            height -= (event.getX() - moveX)/100;
-        }
-    }
+
 
 
     @Override
@@ -140,15 +118,9 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-
-    public void setX(float x) {
-        this.x = x;
+    public void setRotate(float rotate) {
+        this.rotate = rotate;
     }
-
-    public void setY(float y) {
-        this.y = y;
-    }
-
 
     public float getX() {
         return x;
@@ -180,6 +152,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
                     if (canvas == null)
                         continue;
                     canvas.drawColor(Color.GRAY);
+
                     onDrawFigure(canvas);
                 } finally {
                     if (canvas != null) {
@@ -191,28 +164,43 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
         }
 
+
         private void onDrawFigure(Canvas canvas) {
             canvas.drawARGB(80, 102, 204, 255);
             paint.setColor(Color.RED);
             paint.setStrokeWidth(10);
+            rotateX = x + (width - x)/2;
+            rotateY = y + (height - y)/2;
 
             switch (MainActivity.EXTRA) {
                 case "draw_point":
+                    canvas.rotate(rotate,x,y + 5);
                     canvas.drawPoint(x, y, paint);
                     break;
                 case "draw_line":
+                    canvas.rotate(rotate,rotateX,rotateY);
                     canvas.drawLine(x, y, width, height, paint);
                     break;
                 case "draw_circle":
-                    canvas.drawCircle(x, y, width, paint);
+                    canvas.rotate(rotate,x,y );
+                    canvas.drawCircle(x, y, 100, paint);
+                    canvas.drawLine(x, y, width, height, paint);
                     break;
                 case "draw_rect":
+                    canvas.rotate(rotate,rotateX,rotateY);
                     canvas.drawRect(x,y,width,height, paint);
                     break;
                 case "draw_text":
-                    paint.setTextSize(width);
-                    y = 450;
+                    paint.setTextSize(150);
+                    canvas.rotate(rotate,x + TEXT.length()*25,y + 75);
                     canvas.drawText(TEXT, x, y, paint);
+                    break;
+                case "select_image":
+                    //canvas.rotate(rotate,x + 125,y + 150);
+                    if (bitmapX != 0 || bitmapY != 0){
+                        bitmapResult = Bitmap.createScaledBitmap(bitmap, bitmapX , bitmapY , true);
+                        canvas.drawBitmap(bitmapResult, x, y, null);
+                    }
                     break;
             }
         }
