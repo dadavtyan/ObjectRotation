@@ -12,6 +12,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
+
+import static android.content.Context.WINDOW_SERVICE;
 
 
 public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback {
@@ -24,11 +27,13 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
     private boolean drag = false;
     private float moveX = 0;
-    DisplayMetrics metrics = getResources().getDisplayMetrics();
     private float rotateX,rotateY;
     private Bitmap bitmap,bitmapResult;
-    private int bitmapX = 450,bitmapY = 500;
+    private int bitmapX = 500,bitmapY = 500;
     private float moveY;
+
+    private WindowManager windowManager;
+
 
     public MySurfaceView(Context c, AttributeSet attrs) {
         this(c, attrs, 0);
@@ -37,16 +42,19 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
     public MySurfaceView(Context c, AttributeSet attrs, int defStyle) {
         super(c, attrs, defStyle);
         getHolder().addCallback(this);
+        windowManager = (WindowManager)c.getSystemService(WINDOW_SERVICE);
+
         paint = new Paint();
         initData();
     }
 
     private void initData() {
-        width = metrics.widthPixels/2 + 100;
-        height = metrics.heightPixels/2 + 100;
-        x = metrics.widthPixels/2 - 100;
-        y = metrics.heightPixels/2 - 100;
-
+        width = windowManager.getDefaultDisplay().getWidth()/2 + 100;
+        height = windowManager.getDefaultDisplay().getHeight()/2 + 100;
+        x = windowManager.getDefaultDisplay().getWidth()/2 - 250;
+        y = windowManager.getDefaultDisplay().getHeight()/2 - 450;
+        Log.i("windowManager","height: "+windowManager.getDefaultDisplay().getHeight());
+        Log.i("windowManager","width: "+windowManager.getDefaultDisplay().getWidth());
     }
 
     public void setBitmap(Bitmap bitmap){
@@ -68,8 +76,8 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (MainActivity.EXTRA == "select_image" && str != null){
-                    bitmapX = (int) (x + bitmapX -  event.getX());
-                    bitmapY = (int) (y + bitmapY - event.getY());
+                    bitmapX = (int) (2 * x + bitmapX - 2*event.getX());
+                    bitmapY = bitmapX;
                     x = event.getX() ;
                     y = event.getY();
 
@@ -151,7 +159,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
                     canvas = surfaceHolder.lockCanvas(null);
                     if (canvas == null)
                         continue;
-                    canvas.drawColor(Color.GRAY);
+                  //  canvas.drawColor(Color.GRAY);
 
                     onDrawFigure(canvas);
                 } finally {
@@ -196,7 +204,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
                     canvas.drawText(TEXT, x, y, paint);
                     break;
                 case "select_image":
-                    //canvas.rotate(rotate,x + 125,y + 150);
+                    canvas.rotate(rotate,x + 250,y + 250);
                     if (bitmapX != 0 || bitmapY != 0){
                         bitmapResult = Bitmap.createScaledBitmap(bitmap, bitmapX , bitmapY , true);
                         canvas.drawBitmap(bitmapResult, x, y, null);
